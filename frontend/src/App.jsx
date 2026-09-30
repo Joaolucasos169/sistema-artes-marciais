@@ -1,52 +1,46 @@
 import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, AuthContext } from './context/AuthContext';
+import { AuthContext, AuthProvider } from './context/AuthContext';
 import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
 
-// Componente temporário para rotas protegidas
-const RotaPrivada = ({ children }) => {
+// Componente para proteger rotas privadas
+function PrivateRoute({ children }) {
   const { usuario, carregando } = useContext(AuthContext);
 
   if (carregando) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
-        A carregar sessão...
+        <p>A carregar...</p>
       </div>
     );
   }
 
   return usuario ? children : <Navigate to="/login" />;
-};
-
-function RotasApp() {
-  const { usuario } = useContext(AuthContext);
-
-  return (
-    <Routes>
-      <Route path="/login" element={usuario ? <Navigate to="/dashboard" /> : <Login />} />
-      
-      <Route 
-        path="/dashboard" 
-        element={
-          <RotaPrivada>
-            <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
-              <h1 className="text-3xl font-bold">Painel / Dashboard (Em construção)</h1>
-            </div>
-          </RotaPrivada>
-        } 
-      />
-
-      <Route path="*" element={<Navigate to="/login" />} />
-    </Routes>
-  );
 }
 
 export default function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <RotasApp />
-      </AuthProvider>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* Rota pública de Login */}
+          <Route path="/login" element={<Login />} />
+
+          {/* Rota protegida do Dashboard */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            } 
+          />
+
+          {/* Redireciona qualquer rota inválida ou a raiz para o login */}
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
